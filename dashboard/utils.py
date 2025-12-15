@@ -16,21 +16,21 @@ except (FileNotFoundError, KeyError):
 
 @st.cache_resource
 def get_db_connection():
-    """Create cached MongoDB connection with SSL handling"""
+    """Create cached MongoDB connection with proper error handling"""
     try:
-        # Try with SSL verification disabled for Streamlit Cloud compatibility
         client = MongoClient(
             MONGO_URL,
-            tlsAllowInvalidCertificates=True,
-            retryWrites=False,
-            serverSelectionTimeoutMS=10000,
-            connectTimeoutMS=10000
+            serverSelectionTimeoutMS=15000,
+            connectTimeoutMS=15000,
+            socketTimeoutMS=15000
         )
         # Test connection
         client.admin.command('ping')
+        st.success("✅ Connected to MongoDB")
         return client
     except Exception as e:
-        st.error(f"MongoDB connection error: {str(e)}")
+        st.error(f"❌ MongoDB connection failed: {str(e)}")
+        st.info("**Troubleshooting:**\n- Check MongoDB Atlas IP whitelist includes 0.0.0.0/0\n- Verify MONGO_URL in secrets is correct")
         st.stop()
 
 # Data loading with caching

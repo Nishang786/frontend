@@ -164,10 +164,21 @@ if 'temperature_2m_marine' in filtered_df.columns:
     ))
 
 fig_temp = apply_custom_theme(fig_temp, "Temperature Over Time (Land vs Marine)")
+fig_temp.update_layout(
+    height=600,
+    hovermode='x unified',
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    )
+)
 fig_temp.update_xaxes(title="Date/Time")
 fig_temp.update_yaxes(title="Temperature (°C)")
 
-st.plotly_chart(fig_temp, use_container_width=True)
+st.plotly_chart(fig_temp, use_container_width=True, config={'responsive': True})
 
 # Data summary table
 st.subheader("Data Summary Statistics")
