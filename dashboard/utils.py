@@ -5,6 +5,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
+import ssl
 
 # MongoDB connection with caching
 # Try to get from Streamlit secrets (cloud), fallback to .env (local)
@@ -15,9 +16,22 @@ except (FileNotFoundError, KeyError):
 
 @st.cache_resource
 def get_db_connection():
-    """Create cached MongoDB connection"""
-    client = MongoClient(MONGO_URL)
-    return client
+    """Create cached MongoDB connection with SSL handling"""
+    try:
+        # Try with SSL verification disabled for Streamlit Cloud compatibility
+        client = MongoClient(
+            MONGO_URL,
+            tlsAllowInvalidCertificates=True,
+            retryWrites=False,
+            serverSelectionTimeoutMS=10000,
+            connectTimeoutMS=10000
+        )
+        # Test connection
+        client.admin.command('ping')
+        return client
+    except Exception as e:
+        st.error(f"MongoDB connection error: {str(e)}")
+        st.stop()
 
 # Data loading with caching
 @st.cache_data(ttl=600)  # Cache for 10 minutes
