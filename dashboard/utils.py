@@ -7,7 +7,11 @@ from plotly.subplots import make_subplots
 import os
 
 # MongoDB connection with caching
-MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://etl_user:7oy3cvMr5Ue0PkKf@cluster0.bgj5m0x.mongodb.net/?appName=Cluster0")
+# Try to get from Streamlit secrets (cloud), fallback to .env (local)
+try:
+    MONGO_URL = st.secrets["MONGO_URL"]
+except (FileNotFoundError, KeyError):
+    MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://etl_user:7oy3cvMr5Ue0PkKf@cluster0.bgj5m0x.mongodb.net/?appName=Cluster0")
 
 @st.cache_resource
 def get_db_connection():
