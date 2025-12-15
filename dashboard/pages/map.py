@@ -286,17 +286,7 @@ col4.metric("Rain", f"{rain:.2f} mm/h")
 col5.metric("Wind", f"{wind:.1f} m/s")
 col6.metric("Pressure", f"{current_data['pressure_msl']:.1f} hPa")
 
-# Add explanation
-st.markdown("---")
-st.info("""
-**Map Legend:**
-- **Yellow/Gold Glow:** Solar radiation intensity
-- **Gray Cloud:** Cloud cover percentage
-- **Blue Raindrops:** Precipitation intensity
-- **Purple Arrow:** Wind direction and speed
-- **Background Color:** Temperature (red=hot, blue=cold)
-- **Center Icon:** Overall weather condition
-""")
+
 
 # Add daily comparison
 st.markdown("---")

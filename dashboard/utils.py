@@ -1,36 +1,58 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
+from pymongo import MongoClient
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
 
-# Database connection with caching
-PG_HOST = os.getenv("PG_HOST", "127.0.0.1")
-PG_PORT = os.getenv("PG_PORT", "5432")
-PG_USER = os.getenv("PG_USER", "etl_user")
-PG_PASSWORD = os.getenv("PG_PASSWORD", "StrongPass123!")
-PG_DB   = os.getenv("PG_DB", "weather_demo")
+# MongoDB connection with caching
+MONGO_URL = os.getenv("MONGO_URL", "mongodb+srv://etl_user:7oy3cvMr5Ue0PkKf@cluster0.bgj5m0x.mongodb.net/?appName=Cluster0")
+
 @st.cache_resource
 def get_db_connection():
-    """Create cached db connection"""
-    url = f"postgresql+psycopg2://{PG_USER}:{PG_PASSWORD}@{PG_HOST}:{PG_PORT}/{PG_DB}"
-    return create_engine(url)
+    """Create cached MongoDB connection"""
+    client = MongoClient(MONGO_URL)
+    return client
 
 # Data loading with caching
 @st.cache_data(ttl=600)  # Cache for 10 minutes
 def load_table(_conn, table_name):
-    """Load table from database with caching"""
-    query = f'SELECT * FROM {table_name}'
-    df = pd.read_sql(query, _conn)
-    df['time'] = pd.to_datetime(df['time'])
+    """Load collection from MongoDB with caching"""
+    db = _conn['weather_analytics']  # Database name from your ETL code
+    collection = db[table_name]
+
+    
+    data = list(collection.find({}, {'_id': 0}))  # Exclude MongoDB's internal _id field
+    df = pd.DataFrame(data)
+    if 'time' in df.columns:
+        df['time'] = pd.to_datetime(df['time'])
     return df
 
 @st.cache_data(ttl=600)
 def load_fact_table(_conn):
-    """Load unified fact table"""
-    return load_table(_conn, 'fact_weather')
+    """Load unified fact collection from MongoDB"""
+    df = load_table(_conn, 'fact_weather')
+    
+    # Check if time column exists, if not show available columns
+    if 'time' not in df.columns:
+        st.error(f"'time' column not found in database. Available columns: {list(df.columns)}")
+        st.stop()
+    
+    # Ensure time column is datetime (MongoDB may store as ISO string)
+    df['time'] = pd.to_datetime(df['time'], errors='coerce')
+    
+    # Add derived columns from time if they don't exist
+    if 'month_name' not in df.columns:
+        df['month_name'] = df['time'].dt.strftime('%B')
+    if 'hour' not in df.columns:
+        df['hour'] = df['time'].dt.hour
+    if 'day_of_week' not in df.columns:
+        df['day_of_week'] = df['time'].dt.day_name()
+    if 'is_weekend' not in df.columns:
+        df['is_weekend'] = df['time'].dt.dayofweek.isin([5, 6]).astype(int)
+    
+    return df
 
 # Custom Plotly theme
 def apply_custom_theme(fig, title=""):

@@ -100,36 +100,40 @@ st.sidebar.markdown(f"**Filtered Records: {len(filtered_df):,}**")
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    avg_temp = filtered_df['temperature_2m'].mean()
-    st.metric(
-        label="Avg Temperature",
-        value=f"{avg_temp:.1f}°C",
-        delta=f"{avg_temp - df['temperature_2m'].mean():.1f}°C"
-    )
+    if 'temperature_2m' in filtered_df.columns:
+        avg_temp = filtered_df['temperature_2m'].mean()
+        st.metric(
+            label="Avg Temperature",
+            value=f"{avg_temp:.1f}°C",
+            delta=f"{avg_temp - df['temperature_2m'].mean():.1f}°C"
+        )
 
 with col2:
-    avg_rain = filtered_df['rain'].mean()
-    st.metric(
-        label="Avg Rainfall",
-        value=f"{avg_rain:.1f} mm",
-        delta=f"{avg_rain - df['rain'].mean():.1f} mm"
-    )
+    if 'rain' in filtered_df.columns:
+        avg_rain = filtered_df['rain'].mean()
+        st.metric(
+            label="Avg Rainfall",
+            value=f"{avg_rain:.1f} mm",
+            delta=f"{avg_rain - df['rain'].mean():.1f} mm"
+        )
 
 with col3:
-    avg_wind = filtered_df['wind_speed_10m'].mean()
-    st.metric(
-        label="Avg Wind Speed",
-        value=f"{avg_wind:.1f} m/s",
-        delta=f"{avg_wind - df['wind_speed_10m'].mean():.1f} m/s"
-    )
+    if 'wind_speed_10m' in filtered_df.columns:
+        avg_wind = filtered_df['wind_speed_10m'].mean()
+        st.metric(
+            label="Avg Wind Speed",
+            value=f"{avg_wind:.1f} m/s",
+            delta=f"{avg_wind - df['wind_speed_10m'].mean():.1f} m/s"
+        )
 
 with col4:
-    avg_radiation = filtered_df['shortwave_radiation'].mean()
-    st.metric(
-        label="Avg Solar Radiation",
-        value=f"{avg_radiation:.0f} W/m²",
-        delta=f"{avg_radiation - df['shortwave_radiation'].mean():.0f} W/m²"
-    )
+    if 'shortwave_radiation' in filtered_df.columns:
+        avg_radiation = filtered_df['shortwave_radiation'].mean()
+        st.metric(
+            label="Avg Solar Radiation",
+            value=f"{avg_radiation:.0f} W/m²",
+            delta=f"{avg_radiation - df['shortwave_radiation'].mean():.0f} W/m²"
+        )
 
 st.markdown("---")
 
@@ -138,24 +142,26 @@ st.subheader("Temperature Trend Overview")
 
 fig_temp = go.Figure()
 
-fig_temp.add_trace(go.Scatter(
-    x=filtered_df['time'],
-    y=filtered_df['temperature_2m'],
-    mode='lines',
-    name='Land Temperature',
-    line=dict(color=COLORS['primary'], width=2),
-    fill='tozeroy',
-    fillcolor='rgba(31, 119, 180, 0.1)'
-))
+if 'temperature_2m' in filtered_df.columns:
+    fig_temp.add_trace(go.Scatter(
+        x=filtered_df['time'],
+        y=filtered_df['temperature_2m'],
+        mode='lines',
+        name='Land Temperature',
+        line=dict(color=COLORS['primary'], width=2),
+        fill='tozeroy',
+        fillcolor='rgba(31, 119, 180, 0.1)'
+    ))
 
 # Add marine temperature if available
-fig_temp.add_trace(go.Scatter(
-    x=filtered_df['time'],
-    y=filtered_df['temperature_2m_marine'],
-    mode='lines',
-    name='Marine Temperature',
-    line=dict(color=COLORS['secondary'], width=2, dash='dash')
-))
+if 'temperature_2m_marine' in filtered_df.columns:
+    fig_temp.add_trace(go.Scatter(
+        x=filtered_df['time'],
+        y=filtered_df['temperature_2m_marine'],
+        mode='lines',
+        name='Marine Temperature',
+        line=dict(color=COLORS['secondary'], width=2, dash='dash')
+    ))
 
 fig_temp = apply_custom_theme(fig_temp, "Temperature Over Time (Land vs Marine)")
 fig_temp.update_xaxes(title="Date/Time")
@@ -166,22 +172,28 @@ st.plotly_chart(fig_temp, use_container_width=True)
 # Data summary table
 st.subheader("Data Summary Statistics")
 
-summary_stats = filtered_df[[
+# Select only columns that exist in the dataframe
+summary_cols = [
     'temperature_2m', 'rain', 'wind_speed_10m', 
     'shortwave_radiation', 'pressure_msl', 'et0_fao_evapotranspiration'
-]].describe()
+]
+summary_cols = [col for col in summary_cols if col in filtered_df.columns]
 
-st.dataframe(
-    summary_stats.style.highlight_max(axis=0, color='lightgreen')
-                      .highlight_min(axis=0, color='lightcoral')
-                      .format("{:.2f}"),
-    use_container_width=True
-)
+if summary_cols:
+    summary_stats = filtered_df[summary_cols].describe()
+    st.dataframe(
+        summary_stats.style.highlight_max(axis=0, color='lightgreen')
+                          .highlight_min(axis=0, color='lightcoral')
+                          .format("{:.2f}"),
+        use_container_width=True
+    )
+else:
+    st.warning("No summary statistics available for the selected columns.")
 
 # Footer
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: #666;'>
-    <p>Data Source: Open-Meteo API | Storage: PostgreSQL | ETL: Dagster | Visualization: Plotly</p>
+    <p>Data Source: Open-Meteo API | Storage: MongoDB Atlas | ETL: Dagster | Visualization: Plotly</p>
 </div>
 """, unsafe_allow_html=True)
