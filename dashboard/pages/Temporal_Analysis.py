@@ -88,7 +88,7 @@ st.success("You can see seasonal patterns (side to side) and daily temperature s
 
 # Day of Week Pattern
 st.markdown("---")
-st.subheader("Bonus: Day-of-Week Temperature Pattern")
+st.subheader("Day-of-Week Temperature Pattern")
 
 dow_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 dow_data = df.groupby('day_of_week')['temperature_2m'].agg(['mean', 'std']).reset_index()

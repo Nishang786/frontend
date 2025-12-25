@@ -141,9 +141,9 @@ with col2:
 
 st.info("Cloud cover and solar radiation are strongly inversely related - more clouds means less sun.")
 
-# Bonus: 3D Scatter
+# 3D Scatter
 st.markdown("---")
-st.subheader("Bonus: 3D Analysis of Temperature, Wind, and Solar Radiation")
+st.subheader("3D Analysis of Temperature, Wind, and Solar Radiation")
 
 scatter_3d = df.sample(n=min(2000, len(df)), random_state=42)
 

@@ -113,9 +113,9 @@ st.plotly_chart(fig5, use_container_width=True)
 
 st.info("More clouds mean less solar radiation - they're inversely related.")
 
-# Bonus: Radiation Heatmap by Hour and Month
+# Radiation Heatmap by Hour and Month
 st.markdown("---")
-st.subheader("Bonus: Solar Radiation Heatmap (Hour × Month)")
+st.subheader("Solar Radiation Heatmap (Hour × Month)")
 
 heatmap_data = df.groupby(['month_name', 'hour'])['shortwave_radiation'].mean().reset_index()
 heatmap_pivot = heatmap_data.pivot(index='hour', columns='month_name', values='shortwave_radiation')
